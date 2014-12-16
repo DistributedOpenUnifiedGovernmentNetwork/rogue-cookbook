@@ -1,7 +1,9 @@
+
+
 node.default['nginx']['init_style'] = "init"
 node.default['nginx']['install_method'] = 'source'
-node.default['nginx']['source']['version'] = '1.4.1'
-node.default['nginx']['source']['checksum'] = 'bca5d1e89751ba29406185e1736c390412603a7e6b604f5b4575281f6565d119'
+node.default['nginx']['source']['version'] = '1.4.4'
+node.default['nginx']['source']['checksum'] = '7c989a58e5408c9593da0bebcd0e4ffc3d892d1316ba5042ddb0be5b0b4102b9'
 node.default['nginx']['source']['url'] = "http://nginx.org/download/nginx-#{node['nginx']['source']['version']}.tar.gz"
 node.default['nginx']['source']['prefix']                  = "/opt/nginx-#{node['nginx']['source']['version']}"
 node.default['nginx']['source']['conf_path']               = "#{node['nginx']['dir']}/nginx.conf"
@@ -16,6 +18,14 @@ node.default['nginx']['source']['default_configure_flags'] = [
 # http://smotko.si/nginx-static-file-problem/
 if node['rogue']['debug']
   node.set['nginx']['sendfile'] = 'off'
+end
+
+# kill old nginx processes when a new version is compiled.
+execute "kill_old_nginx_processes" do
+  command "[[ -f #{node['nginx']['pid']} ]] && kill `cat #{node['nginx']['pid']}` || true"
+  action :nothing
+  notifies :restart, 'service[nginx]'
+  subscribes :run, 'bash[compile_nginx_source]', :immediately
 end
 
 include_recipe 'nginx::default'
